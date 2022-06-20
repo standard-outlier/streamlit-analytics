@@ -35,6 +35,7 @@ def reset_counts():
     counts["total_script_runs"] = 0
     counts["total_time_seconds"] = 0
     counts["per_day"] = {"days": [str(yesterday)], "pageviews": [0], "script_runs": [0]}
+    counts["by_user"] = {}
     counts["widgets"] = {}
     counts["start_time"] = datetime.datetime.now().strftime("%d %b %Y, %H:%M:%S")
 
@@ -74,7 +75,7 @@ _orig_sidebar_file_uploader = st.sidebar.file_uploader
 _orig_sidebar_color_picker = st.sidebar.color_picker
 
 
-def _track_user(sess):
+def _track_user(sess, user_name):
     """Track individual pageviews by storing user id to session state."""
     today = str(datetime.date.today())
     if counts["per_day"]["days"][-1] != today:
@@ -91,6 +92,10 @@ def _track_user(sess):
         sess.user_tracked = True
         counts["total_pageviews"] += 1
         counts["per_day"]["pageviews"][-1] += 1
+        if user_name in counts["by_user"]:
+            counts["by_user"][user_name] += 1
+        else:
+             counts["by_user"][user_name] =0
         # print("Tracked new user")
 
 
@@ -241,6 +246,7 @@ def start_tracking(
     firestore_key_file: str = None,
     firestore_collection_name: str = "counts",
     load_from_json: Union[str, Path] = None,
+    username=None
 ):
     """
     Start tracking user inputs to a streamlit app.
@@ -281,7 +287,7 @@ def start_tracking(
         state_dict={},
         last_time=datetime.datetime.now(),
     )
-    _track_user(sess)
+    _track_user(sess, username)
 
     # Monkey-patch streamlit to call the wrappers above.
     st.button = _wrap_button(_orig_button, sess.state_dict)
@@ -427,6 +433,7 @@ def track(
     firestore_collection_name: str = "counts",
     verbose=False,
     load_from_json: Union[str, Path] = None,
+    username=None
 ):
     """
     Context manager to start and stop tracking user inputs to a streamlit app.
@@ -441,6 +448,7 @@ def track(
         firestore_key_file=firestore_key_file,
         firestore_collection_name=firestore_collection_name,
         load_from_json=load_from_json,
+        username=username
     )
 
     # Yield here to execute the code in the with statement. This will call the wrappers

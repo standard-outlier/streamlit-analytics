@@ -96,6 +96,16 @@ def show_results(counts, reset_callback, unsafe_password=None):
         )
         st.altair_chart(layer, use_container_width=True)
 
+
+        # Show user login
+        st.header("Users")
+        st.markdown(
+            """
+            Find out who are using your app!
+            """
+        )
+        st.write(counts["by_user"])
+
         # Show widget interactions.
         st.header("Widget interactions")
         st.markdown(
@@ -118,7 +128,7 @@ def show_results(counts, reset_callback, unsafe_password=None):
             st.write(
                 """
                 Here you can reset all analytics results.
-                
+
                 **This will erase everything tracked so far. You will not be able to 
                 retrieve it. This will also overwrite any results synced to Firestore.**
                 """
